@@ -1,6 +1,7 @@
 import FeaturedCurses from "@/src/components/FeaturedCurses";
 import MusicSchoolTestimonials from "@/src/components/TestimonialCards";
 import HeroSection from "@/src/components/ui/HeroSection";
+import UpcomingWebinar from "@/src/components/UpcomingWebinar";
 import WhyChooseUs from "@/src/components/WhyChooseUs";
 import { main } from "motion/react-client";
 
@@ -12,7 +13,7 @@ export default function Home() {
       <FeaturedCurses />
       <WhyChooseUs />
       <MusicSchoolTestimonials />
-      
+      <UpcomingWebinar />
     </main>
   );
 }
