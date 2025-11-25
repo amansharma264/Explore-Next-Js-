@@ -1,4 +1,5 @@
 import FeaturedCurses from "@/src/components/FeaturedCurses";
+import Footer from "@/src/components/Footer";
 import Instructors from "@/src/components/Instructors";
 import MusicSchoolTestimonials from "@/src/components/TestimonialCards";
 import HeroSection from "@/src/components/ui/HeroSection";
@@ -17,6 +18,7 @@ export default function Home() {
       {/* ❌ Error was here: <Instructors / > */}
       {/* ✔ Corrected below */}
       <Instructors />
+      <Footer />
     </main>
   );
 }
