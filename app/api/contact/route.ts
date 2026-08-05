@@ -77,7 +77,7 @@ export async function POST(request: Request) {
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          access_key: '64d2bfd1-419b-449e-b5c6-6bc82f80875e',
+          access_key: 'c17d4580-de06-4cfc-a8c8-c202abe1e173',
           subject: `New Inquiry from ${name}${course ? ` (${course})` : ''}`,
           from_name: `${name} (Music Academy)`,
           name: name,

@@ -55,7 +55,7 @@ function ContactFormContent() {
             Accept: 'application/json',
           },
           body: JSON.stringify({
-            access_key: '64d2bfd1-419b-449e-b5c6-6bc82f80875e',
+            access_key: 'c17d4580-de06-4cfc-a8c8-c202abe1e173',
             subject: `New Music Academy Inquiry from ${formData.name}`,
             from_name: `${formData.name} (Music Academy)`,
             name: formData.name,
