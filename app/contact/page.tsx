@@ -36,30 +36,29 @@ function ContactFormContent() {
     setLoading(true);
     setError('');
 
-    let sent = false;
-
-    // 1. Try local or deployed API route (/api/contact)
     try {
-      const res = await fetch('/api/contact', {
+      // Direct high-reliability dispatch to officialamansharma264@gmail.com via FormSubmit
+      const response = await fetch('https://formsubmit.co/ajax/officialamansharma264@gmail.com', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          course: formData.course || 'General Inquiry',
+          message: formData.message,
+          _subject: `New Music Academy Inquiry from ${formData.name}`,
+          _template: 'table',
+          _captcha: 'false',
+        }),
       });
 
-      const contentType = res.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const data = await res.json();
-        if (res.ok && data.success) {
-          sent = true;
-        }
-      }
-    } catch (apiErr) {
-      console.warn('/api/contact failed, switching to client dispatch...', apiErr);
-    }
-
-    // 2. Try direct Web3Forms API
-    if (!sent) {
-      try {
+      if (response.ok) {
+        setSubmitted(true);
+      } else {
+        // Fallback attempt via Web3Forms
         const web3Res = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
           headers: {
@@ -69,41 +68,37 @@ function ContactFormContent() {
           body: JSON.stringify({
             access_key: 'c17d4580-de06-4cfc-a8c8-c202abe1e173',
             subject: `New Music Academy Inquiry from ${formData.name}`,
-            from_name: `${formData.name} (Music Academy)`,
             name: formData.name,
             email: formData.email,
-            message: `Interested Course: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`,
-            to: 'officialamansharma264@gmail.com',
+            message: `Course: ${formData.course || 'General'}\n\n${formData.message}`,
+            send_to: 'officialamansharma264@gmail.com',
           }),
         });
 
         if (web3Res.ok) {
-          const web3ContentType = web3Res.headers.get('content-type');
-          if (web3ContentType && web3ContentType.includes('application/json')) {
-            const web3Data = await web3Res.json();
-            if (web3Data.success) {
-              sent = true;
-            }
-          }
+          setSubmitted(true);
+        } else {
+          // Guaranteed fallback: open native mail client pre-filled
+          const mailtoSubject = encodeURIComponent(`Music Academy Inquiry from ${formData.name}`);
+          const mailtoBody = encodeURIComponent(
+            `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
+          );
+          window.location.href = `mailto:officialamansharma264@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
+          setSubmitted(true);
         }
-      } catch (web3Err) {
-        console.warn('Web3Forms client fetch error:', web3Err);
       }
-    }
-
-    // 3. Fallback Mailto Trigger (Ensures 100% receipt regardless of host platform or API key activation)
-    if (!sent) {
+    } catch (err) {
+      console.warn('Form dispatch notice:', err);
+      // Fail-safe trigger
       const mailtoSubject = encodeURIComponent(`Music Academy Inquiry from ${formData.name}`);
       const mailtoBody = encodeURIComponent(
         `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
       );
-      
-      // Trigger default email app
       window.location.href = `mailto:officialamansharma264@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
+      setSubmitted(true);
+    } finally {
+      setLoading(false);
     }
-
-    setSubmitted(true);
-    setLoading(false);
   };
 
   return (
