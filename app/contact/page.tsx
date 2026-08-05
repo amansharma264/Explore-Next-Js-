@@ -56,17 +56,12 @@ function ContactFormContent() {
             <div className="space-y-4 pt-4">
               <div>
                 <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Campus Location</p>
-                <p className="text-sm text-neutral-200 mt-1">Connaught Place, New Delhi, India 110001</p>
+                <p className="text-sm text-neutral-200 mt-1">Bangalore</p>
               </div>
 
               <div>
                 <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Email Admissions</p>
-                <p className="text-sm text-teal-400 mt-1">admissions@musicschool.com</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Phone Support</p>
-                <p className="text-sm text-neutral-200 mt-1">+91 (011) 4567-8900</p>
+                <p className="text-sm text-teal-400 mt-1">officialamansharma264@gmail.com</p>
               </div>
             </div>
           </div>
