@@ -4,19 +4,19 @@ import { StickyScroll } from "./ui/sticky-scroll-reveal";
 
 const musicSchoolContent = [
     {
-      title: 'Discover Your Sound with Us: A Personal Journey in Music Mastery',
+      title: 'Discover Your Sound: Personalized Mentorship',
       description:
-        'Embark on a musical journey that’s uniquely yours. Our personalized instruction adapts to your individual needs, setting the stage for unparalleled growth and creativity. At our music school, your aspirations meet our dedicated support, creating a harmonious path to mastery.',
+        'Embark on a musical journey tailored specifically to your goals. Our expert instruction adapts to your unique learning pace, fostering authentic artistic growth and unlocking creative confidence.',
     },
     {
-      title: 'Discover Your Sound with Us: A Personal Journey in Music Mastery',
+      title: 'World-Class Faculty & Alumni Network',
       description:
-        'Embark on a musical journey that’s uniquely yours. Our personalized instruction adapts to your individual needs, setting the stage for unparalleled growth and creativity. At our music school, your aspirations meet our dedicated support, creating a harmonious path to mastery.',
+        'Learn directly from acclaimed industry professionals, Grammy-nominated producers, and master musicians who bring real-world experience and industry insights into every masterclass.',
     },
     {
-      title: 'Discover Your Sound with Us: A Personal Journey in Music Mastery',
+      title: 'State-of-the-Art Production Labs',
       description:
-        'Embark on a musical journey that’s uniquely yours. Our personalized instruction adapts to your individual needs, setting the stage for unparalleled growth and creativity. At our music school, your aspirations meet our dedicated support, creating a harmonious path to mastery.',
+        'Gain hands-on experience with industry-standard digital audio workstations, analog synthesizers, studio-grade acoustics, and modern music production software.',
     },
     {
       title: 'Live Feedback & Engagement',
