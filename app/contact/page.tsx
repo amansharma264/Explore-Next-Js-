@@ -40,10 +40,6 @@ function ContactFormContent() {
           const data = await res.json();
           if (res.ok && data.success) {
             success = true;
-          } else if (data.error) {
-            setError(data.error);
-            setLoading(false);
-            return;
           }
         }
       } catch (apiErr) {
