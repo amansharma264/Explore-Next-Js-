@@ -25,22 +25,64 @@ function ContactFormContent() {
     setError('');
 
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      let success = false;
 
-      const data = await res.json();
+      // 1. Try local / deployed API Route (/api/contact)
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
 
-      if (res.ok && data.success) {
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (res.ok && data.success) {
+            success = true;
+          } else if (data.error) {
+            setError(data.error);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (apiErr) {
+        console.warn('/api/contact route unavailable, switching to direct client dispatch...', apiErr);
+      }
+
+      // 2. Fallback for Static Host Deployments (GitHub Pages / Netlify / Vercel Static)
+      if (!success) {
+        const web3Res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            access_key: '64d2bfd1-419b-449e-b5c6-6bc82f80875e',
+            subject: `New Music Academy Inquiry from ${formData.name}`,
+            from_name: `${formData.name} (Music Academy)`,
+            name: formData.name,
+            email: formData.email,
+            message: `Course Interest: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`,
+            send_to: 'officialamansharma264@gmail.com',
+          }),
+        });
+
+        const web3Data = await web3Res.json();
+        if (web3Res.ok && web3Data.success) {
+          success = true;
+        }
+      }
+
+      if (success) {
         setSubmitted(true);
       } else {
-        setError(data.error || 'Failed to dispatch message. Please try again.');
+        setError('Unable to send message at this moment. Please email officialamansharma264@gmail.com directly.');
       }
     } catch (err) {
       console.error('Contact form submission error:', err);
-      setError('Network request error. Please try again later.');
+      setError('Network request failed. Please check your connection.');
     } finally {
       setLoading(false);
     }
