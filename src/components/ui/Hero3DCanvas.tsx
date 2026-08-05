@@ -6,9 +6,6 @@ interface Point3D {
   x: number;
   y: number;
   z: number;
-  baseX: number;
-  baseY: number;
-  baseZ: number;
 }
 
 export const Hero3DCanvas = () => {
@@ -18,10 +15,21 @@ export const Hero3DCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animationFrameId: number;
+    let isVisible = true;
+
+    // Pause canvas rendering when off-screen to prevent CPU lag
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(canvas);
+
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
@@ -31,124 +39,117 @@ export const Hero3DCanvas = () => {
       height = canvas.height = window.innerHeight;
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
 
-    // Generate 3D Fibonacci Sphere points
-    const numPoints = 220;
+    // Generate lightweight 3D Fibonacci Sphere (65 points for optimal 60 FPS)
+    const numPoints = 65;
     const points: Point3D[] = [];
     const radius = Math.min(width, height) * 0.35;
-    const phi = Math.PI * (3 - Math.sqrt(5)); // Golden ratio angle
+    const phi = Math.PI * (3 - Math.sqrt(5));
 
     for (let i = 0; i < numPoints; i++) {
-      const y = 1 - (i / (numPoints - 1)) * 2; // y goes from 1 to -1
-      const radiusAtY = Math.sqrt(1 - y * y); // radius at y
+      const y = 1 - (i / (numPoints - 1)) * 2;
+      const radiusAtY = Math.sqrt(1 - y * y);
       const theta = phi * i;
 
-      const x = Math.cos(theta) * radiusAtY;
-      const z = Math.sin(theta) * radiusAtY;
-
       points.push({
-        x: x * radius,
+        x: Math.cos(theta) * radiusAtY * radius,
         y: y * radius,
-        z: z * radius,
-        baseX: x * radius,
-        baseY: y * radius,
-        baseZ: z * radius,
+        z: Math.sin(theta) * radiusAtY * radius,
       });
     }
 
-    let angleX = 0.002;
-    let angleY = 0.003;
-    let mouseX = 0;
-    let mouseY = 0;
+    let angleX = 0.0015;
+    let angleY = 0.002;
+    let targetMouseX = 0;
+    let targetMouseY = 0;
+    let currentMouseX = 0;
+    let currentMouseY = 0;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX = (e.clientX - width / 2) * 0.00005;
-      mouseY = (e.clientY - height / 2) * 0.00005;
+      targetMouseX = (e.clientX - width / 2) * 0.00003;
+      targetMouseY = (e.clientY - height / 2) * 0.00003;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     const render = () => {
-      ctx.clearRect(0, 0, width, height);
+      if (isVisible) {
+        ctx.clearRect(0, 0, width, height);
 
-      const rotX = angleX + mouseY;
-      const rotY = angleY + mouseX;
+        currentMouseX += (targetMouseX - currentMouseX) * 0.05;
+        currentMouseY += (targetMouseY - currentMouseY) * 0.05;
 
-      const cosX = Math.cos(rotX);
-      const sinX = Math.sin(rotX);
-      const cosY = Math.cos(rotY);
-      const sinY = Math.sin(rotY);
+        const rotX = angleX + currentMouseY;
+        const rotY = angleY + currentMouseX;
 
-      const projectedPoints: { x2d: number; y2d: number; z: number; scale: number }[] = [];
-      const perspective = 600;
-      const cx = width / 2;
-      const cy = height / 2 - 20;
+        const cosX = Math.cos(rotX);
+        const sinX = Math.sin(rotX);
+        const cosY = Math.cos(rotY);
+        const sinY = Math.sin(rotY);
 
-      // Rotate and Project 3D points
-      for (let i = 0; i < points.length; i++) {
-        const p = points[i];
+        const projectedPoints: { x2d: number; y2d: number; z: number; scale: number }[] = [];
+        const perspective = 550;
+        const cx = width / 2;
+        const cy = height / 2 - 10;
 
-        // Rotate Y
-        let x1 = p.x * cosY - p.z * sinY;
-        let z1 = p.z * cosY + p.x * sinY;
+        // Rotate and project 3D points
+        for (let i = 0; i < points.length; i++) {
+          const p = points[i];
 
-        // Rotate X
-        let y1 = p.y * cosX - z1 * sinX;
-        let z2 = z1 * cosX + p.y * sinX;
+          let x1 = p.x * cosY - p.z * sinY;
+          let z1 = p.z * cosY + p.x * sinY;
 
-        p.x = x1;
-        p.y = y1;
-        p.z = z2;
+          let y1 = p.y * cosX - z1 * sinX;
+          let z2 = z1 * cosX + p.y * sinX;
 
-        const scale = perspective / (perspective + z2 + 300);
-        const x2d = cx + x1 * scale;
-        const y2d = cy + y1 * scale;
+          p.x = x1;
+          p.y = y1;
+          p.z = z2;
 
-        projectedPoints.push({ x2d, y2d, z: z2, scale });
-      }
+          const scale = perspective / (perspective + z2 + 300);
+          projectedPoints.push({
+            x2d: cx + x1 * scale,
+            y2d: cy + y1 * scale,
+            z: z2,
+            scale,
+          });
+        }
 
-      // Draw 3D Connecting Lines
-      const maxDistance = 90;
-      for (let i = 0; i < projectedPoints.length; i++) {
-        for (let j = i + 1; j < projectedPoints.length; j++) {
-          const p1 = projectedPoints[i];
-          const p2 = projectedPoints[j];
+        // Draw Connecting 3D Lines (Optimized single-color stroke)
+        const maxDistance = 110;
+        ctx.lineWidth = 0.8;
+        for (let i = 0; i < projectedPoints.length; i++) {
+          for (let j = i + 1; j < projectedPoints.length; j++) {
+            const p1 = projectedPoints[i];
+            const p2 = projectedPoints[j];
 
-          const dx = p1.x2d - p2.x2d;
-          const dy = p1.y2d - p2.y2d;
-          const dist2d = Math.sqrt(dx * dx + dy * dy);
+            const dx = p1.x2d - p2.x2d;
+            const dy = p1.y2d - p2.y2d;
+            const dist2d = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist2d < maxDistance) {
-            const alpha = (1 - dist2d / maxDistance) * 0.25;
-            ctx.beginPath();
-            ctx.moveTo(p1.x2d, p1.y2d);
-            ctx.lineTo(p2.x2d, p2.y2d);
-
-            const gradient = ctx.createLinearGradient(p1.x2d, p1.y2d, p2.x2d, p2.y2d);
-            gradient.addColorStop(0, `rgba(20, 184, 166, ${alpha})`);
-            gradient.addColorStop(1, `rgba(168, 85, 247, ${alpha})`);
-
-            ctx.strokeStyle = gradient;
-            ctx.lineWidth = 1 * Math.min(p1.scale, p2.scale);
-            ctx.stroke();
+            if (dist2d < maxDistance) {
+              const alpha = (1 - dist2d / maxDistance) * 0.2;
+              ctx.beginPath();
+              ctx.moveTo(p1.x2d, p1.y2d);
+              ctx.lineTo(p2.x2d, p2.y2d);
+              ctx.strokeStyle = `rgba(45, 212, 191, ${alpha})`;
+              ctx.stroke();
+            }
           }
         }
-      }
 
-      // Draw 3D Nodes
-      for (let i = 0; i < projectedPoints.length; i++) {
-        const p = projectedPoints[i];
-        const alpha = Math.max(0.1, (p.z + radius) / (radius * 2));
-        const size = Math.max(1, 2.5 * p.scale);
+        // Draw 3D Nodes (Fast filled arcs without shadowBlur overhead)
+        for (let i = 0; i < projectedPoints.length; i++) {
+          const p = projectedPoints[i];
+          const alpha = Math.max(0.15, (p.z + radius) / (radius * 2));
+          const size = Math.max(1.2, 2.2 * p.scale);
 
-        ctx.beginPath();
-        ctx.arc(p.x2d, p.y2d, size, 0, Math.PI * 2);
-        ctx.fillStyle = i % 3 === 0 ? `rgba(45, 212, 191, ${alpha})` : `rgba(192, 132, 252, ${alpha})`;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = i % 3 === 0 ? '#14b8a6' : '#a855f7';
-        ctx.fill();
-        ctx.shadowBlur = 0;
+          ctx.beginPath();
+          ctx.arc(p.x2d, p.y2d, size, 0, Math.PI * 2);
+          ctx.fillStyle = i % 2 === 0 ? `rgba(45, 212, 191, ${alpha})` : `rgba(192, 132, 252, ${alpha})`;
+          ctx.fill();
+        }
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -157,6 +158,7 @@ export const Hero3DCanvas = () => {
     render();
 
     return () => {
+      observer.disconnect();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
@@ -166,7 +168,7 @@ export const Hero3DCanvas = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 pointer-events-none z-0 opacity-70"
+      className="absolute inset-0 pointer-events-none z-0 opacity-60"
     />
   );
 };
