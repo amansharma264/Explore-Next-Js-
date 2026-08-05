@@ -7,6 +7,7 @@ import Link from 'next/link';
 function ContactFormContent() {
   const searchParams = useSearchParams();
   const initialCourse = searchParams.get('course') || '';
+  const isSubmittedQuery = searchParams.get('submitted') === 'true';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -15,9 +16,7 @@ function ContactFormContent() {
     message: '',
   });
 
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(isSubmittedQuery);
 
   useEffect(() => {
     if (initialCourse) {
@@ -31,74 +30,12 @@ function ContactFormContent() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      // Direct high-reliability dispatch to officialamansharma264@gmail.com via FormSubmit
-      const response = await fetch('https://formsubmit.co/ajax/officialamansharma264@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          course: formData.course || 'General Inquiry',
-          message: formData.message,
-          _subject: `New Music Academy Inquiry from ${formData.name}`,
-          _template: 'table',
-          _captcha: 'false',
-        }),
-      });
-
-      if (response.ok) {
-        setSubmitted(true);
-      } else {
-        // Fallback attempt via Web3Forms
-        const web3Res = await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            access_key: 'c17d4580-de06-4cfc-a8c8-c202abe1e173',
-            subject: `New Music Academy Inquiry from ${formData.name}`,
-            name: formData.name,
-            email: formData.email,
-            message: `Course: ${formData.course || 'General'}\n\n${formData.message}`,
-            send_to: 'officialamansharma264@gmail.com',
-          }),
-        });
-
-        if (web3Res.ok) {
-          setSubmitted(true);
-        } else {
-          // Guaranteed fallback: open native mail client pre-filled
-          const mailtoSubject = encodeURIComponent(`Music Academy Inquiry from ${formData.name}`);
-          const mailtoBody = encodeURIComponent(
-            `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
-          );
-          window.location.href = `mailto:officialamansharma264@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
-          setSubmitted(true);
-        }
-      }
-    } catch (err) {
-      console.warn('Form dispatch notice:', err);
-      // Fail-safe trigger
-      const mailtoSubject = encodeURIComponent(`Music Academy Inquiry from ${formData.name}`);
-      const mailtoBody = encodeURIComponent(
-        `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
-      );
-      window.location.href = `mailto:officialamansharma264@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`;
-      setSubmitted(true);
-    } finally {
-      setLoading(false);
-    }
+  const handleDirectEmailClick = () => {
+    const subject = encodeURIComponent(`Music Academy Inquiry from ${formData.name || 'Visitor'}`);
+    const body = encodeURIComponent(
+      `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
+    );
+    window.location.href = `mailto:officialamansharma264@gmail.com?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -125,7 +62,7 @@ function ContactFormContent() {
         </div>
 
         <div className="p-4 bg-teal-950/40 border border-teal-800/40 rounded-xl text-xs text-teal-300">
-          💡 <strong>Quick Response Guarantee:</strong> Our admissions team typically responds within 24 hours.
+          💡 <strong>Direct Email:</strong> You can also email us directly at <a href="mailto:officialamansharma264@gmail.com" className="underline font-semibold">officialamansharma264@gmail.com</a>.
         </div>
       </div>
 
@@ -138,7 +75,7 @@ function ContactFormContent() {
             </div>
             <h3 className="text-2xl font-bold text-white">Message Sent!</h3>
             <p className="text-neutral-300 text-sm">
-              Thank you for reaching out, <span className="text-teal-400 font-medium">{formData.name}</span>. We have received your inquiry and sent it to <span className="text-teal-400 font-medium">officialamansharma264@gmail.com</span>.
+              Thank you for reaching out! Your message has been routed to <span className="text-teal-400 font-medium">officialamansharma264@gmail.com</span>. We will get back to you shortly.
             </p>
             <button
               onClick={() => setSubmitted(false)}
@@ -148,12 +85,16 @@ function ContactFormContent() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-950/50 border border-red-800/50 text-red-300 rounded-lg text-xs">
-                {error}
-              </div>
-            )}
+          <form
+            action="https://formsubmit.co/officialamansharma264@gmail.com"
+            method="POST"
+            onSubmit={() => setSubmitted(true)}
+            className="space-y-4"
+          >
+            {/* FormSubmit Configuration */}
+            <input type="hidden" name="_subject" value={`Music Academy Inquiry from ${formData.name || 'Student'}`} />
+            <input type="hidden" name="_captcha" value="false" />
+            <input type="hidden" name="_template" value="table" />
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1">
@@ -195,7 +136,7 @@ function ContactFormContent() {
                 onChange={handleChange}
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500 transition-colors"
               >
-                <option value="">General Inquiry</option>
+                <option value="General Inquiry">General Inquiry</option>
                 <option value="Guitar Fundamentals">Guitar Fundamentals ($99.99)</option>
                 <option value="Piano Masterclass">Piano Masterclass ($129.99)</option>
                 <option value="Vocal Training">Vocal Training ($119.99)</option>
@@ -220,17 +161,22 @@ function ContactFormContent() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
-            >
-              {loading ? (
-                <span>Sending...</span>
-              ) : (
+            <div className="space-y-2 pt-2">
+              <button
+                type="submit"
+                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
                 <span>Send Message &rarr;</span>
-              )}
-            </button>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDirectEmailClick}
+                className="w-full bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium py-2.5 px-6 rounded-lg text-xs transition-colors"
+              >
+                ✉️ Open in Email App (Direct Mail)
+              </button>
+            </div>
           </form>
         )}
       </div>
