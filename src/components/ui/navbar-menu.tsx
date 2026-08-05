@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "motion/react";
+import { cn } from "../../lib/utils";
 
 
 
@@ -63,14 +64,19 @@ export const MenuItem = ({
 export const Menu = ({
   setActive,
   children,
+  className,
 }: {
   setActive: (item: string | null) => void;
   children: React.ReactNode;
+  className?: string;
 }) => {
   return (
     <nav
       onMouseLeave={() => setActive(null)} // resets the state
-      className="relative rounded-full border border-transparent dark:bg-black dark:border-white/[0.2] bg-white shadow-input flex justify-center space-x-4 px-8 py-6 "
+      className={cn(
+        "relative border border-transparent dark:bg-black/80 dark:border-white/[0.2] bg-white/90 backdrop-blur-md shadow-input flex justify-center items-center space-x-6 px-8 py-4 transition-all duration-300",
+        className
+      )}
     >
       {children}
     </nav>
