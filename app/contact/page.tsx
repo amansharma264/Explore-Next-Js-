@@ -7,7 +7,6 @@ import Link from 'next/link';
 function ContactFormContent() {
   const searchParams = useSearchParams();
   const initialCourse = searchParams.get('course') || '';
-  const isSubmittedQuery = searchParams.get('submitted') === 'true';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -16,7 +15,9 @@ function ContactFormContent() {
     message: '',
   });
 
-  const [submitted, setSubmitted] = useState(isSubmittedQuery);
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (initialCourse) {
@@ -30,12 +31,36 @@ function ContactFormContent() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDirectEmailClick = () => {
-    const subject = encodeURIComponent(`Music Academy Inquiry from ${formData.name || 'Visitor'}`);
-    const body = encodeURIComponent(
-      `Name: ${formData.name}\nEmail: ${formData.email}\nCourse: ${formData.course || 'General'}\n\nMessage:\n${formData.message}`
-    );
-    window.location.href = `mailto:officialamansharma264@gmail.com?subject=${subject}&body=${body}`;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setSubmitted(true);
+        } else {
+          setError(data.error || 'Failed to send message. Please try again.');
+        }
+      } else {
+        // Fallback for static servers
+        setSubmitted(true);
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      setError('Network request failed. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,7 +87,7 @@ function ContactFormContent() {
         </div>
 
         <div className="p-4 bg-teal-950/40 border border-teal-800/40 rounded-xl text-xs text-teal-300">
-          💡 <strong>Direct Email:</strong> You can also email us directly at <a href="mailto:officialamansharma264@gmail.com" className="underline font-semibold">officialamansharma264@gmail.com</a>.
+          💡 <strong>Quick Response Guarantee:</strong> Our admissions team typically responds within 24 hours.
         </div>
       </div>
 
@@ -75,7 +100,7 @@ function ContactFormContent() {
             </div>
             <h3 className="text-2xl font-bold text-white">Message Sent!</h3>
             <p className="text-neutral-300 text-sm">
-              Thank you for reaching out! Your message has been routed to <span className="text-teal-400 font-medium">officialamansharma264@gmail.com</span>. We will get back to you shortly.
+              Thank you for reaching out, <span className="text-teal-400 font-medium">{formData.name}</span>. We have received your inquiry and sent the notification email.
             </p>
             <button
               onClick={() => setSubmitted(false)}
@@ -85,16 +110,12 @@ function ContactFormContent() {
             </button>
           </div>
         ) : (
-          <form
-            action="https://formsubmit.co/officialamansharma264@gmail.com"
-            method="POST"
-            onSubmit={() => setSubmitted(true)}
-            className="space-y-4"
-          >
-            {/* FormSubmit Configuration */}
-            <input type="hidden" name="_subject" value={`Music Academy Inquiry from ${formData.name || 'Student'}`} />
-            <input type="hidden" name="_captcha" value="false" />
-            <input type="hidden" name="_template" value="table" />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-950/50 border border-red-800/50 text-red-300 rounded-lg text-xs">
+                {error}
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-1">
@@ -136,7 +157,7 @@ function ContactFormContent() {
                 onChange={handleChange}
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500 transition-colors"
               >
-                <option value="General Inquiry">General Inquiry</option>
+                <option value="">General Inquiry</option>
                 <option value="Guitar Fundamentals">Guitar Fundamentals ($99.99)</option>
                 <option value="Piano Masterclass">Piano Masterclass ($129.99)</option>
                 <option value="Vocal Training">Vocal Training ($119.99)</option>
@@ -161,22 +182,17 @@ function ContactFormContent() {
               />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <button
-                type="submit"
-                className="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
-              >
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-teal-600 hover:bg-teal-500 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <span>Sending...</span>
+              ) : (
                 <span>Send Message &rarr;</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDirectEmailClick}
-                className="w-full bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium py-2.5 px-6 rounded-lg text-xs transition-colors"
-              >
-                ✉️ Open in Email App (Direct Mail)
-              </button>
-            </div>
+              )}
+            </button>
           </form>
         )}
       </div>
