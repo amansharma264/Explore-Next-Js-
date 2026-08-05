@@ -48,9 +48,10 @@ This repository houses a production-grade web application built to showcase mode
 - **Interactive 3D Card Effects**: 3D perspective rotation on hover with depth-translated elements (`3d-card.tsx`).
 - **Rich Course Cards**: Displays title, price badge, course thumbnail image, description, and direct detail links.
 
-### 4. 📬 Admissions & Contact Center (`/contact`)
+### 4. 📬 Admissions & Contact Center (`/contact` & `/api/contact`)
+- **Next.js Server API Route (`app/api/contact/route.ts`)**: Server-side POST route handler processing inquiries, validating payload data, and executing email dispatching via Resend API to `officialamansharma264@gmail.com`.
 - **Query Parameter Pre-selection**: Automatically pre-selects interested course when navigated from a course detail link (e.g. `/contact?course=guitar-fundamentals`).
-- **Interactive Form**: Features Name, Email, Course dropdown, and Message input with simulated API submission states and confirmation feedback.
+- **Interactive Form**: Features Name, Email, Course dropdown, and Message input with async server request handling and error states.
 - **Academy Details**: Direct contact information including Location (`Bangalore`) and Email (`officialamansharma264@gmail.com`).
 
 ### 5. 📜 Sticky Scroll "Why Choose Us"
