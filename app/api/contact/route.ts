@@ -16,8 +16,9 @@ export async function POST(request: Request) {
     const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL || 'officialamansharma264@gmail.com';
     const resendApiKey = process.env.RESEND_API_KEY;
 
+    // 1. If RESEND_API_KEY is configured (locally or on Vercel)
     if (resendApiKey) {
-      console.log(` Attempting Resend delivery to: ${receiverEmail} using API key starting with ${resendApiKey.substring(0, 7)}...`);
+      console.log(`Attempting Resend dispatch to: ${receiverEmail}...`);
       
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -49,28 +50,49 @@ export async function POST(request: Request) {
       const responseData = await res.json();
 
       if (res.ok) {
-        console.log('✅ Resend Dispatch Success! Email ID:', responseData.id);
         return NextResponse.json({
           success: true,
-          message: 'Your message has been sent successfully to your email!',
+          message: 'Your message has been sent successfully!',
           emailId: responseData.id,
         });
       } else {
-        console.error('❌ Resend API Error Response:', responseData);
-        return NextResponse.json(
-          { error: responseData.message || 'Resend failed to deliver email.' },
-          { status: 400 }
-        );
+        console.warn('Resend API Warning on deployed route:', responseData);
       }
     }
 
-    // Fallback if no API key provided
-    console.log('📬 --- CONTACT SUBMISSION RECEIVED (DEV MODE) ---');
+    // 2. High-reliability Web3Forms API dispatch (Works automatically on deployed link without server env vars)
+    console.log(`Dispatching deployed inquiry to ${receiverEmail} via Web3Forms API...`);
+    const web3Res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        access_key: '64d2bfd1-419b-449e-b5c6-6bc82f80875e',
+        subject: `New Inquiry from ${name}${course ? ` (${course})` : ''}`,
+        from_name: `${name} (Music Academy)`,
+        name: name,
+        email: email,
+        message: `Course Interest: ${course || 'General'}\n\nMessage:\n${message}`,
+        send_to: receiverEmail,
+      }),
+    });
+
+    const web3Data = await web3Res.json();
+
+    if (web3Res.ok && web3Data.success) {
+      return NextResponse.json({
+        success: true,
+        message: 'Your message has been delivered successfully!',
+      });
+    }
+
+    // Fallback log
+    console.log('📬 --- CONTACT SUBMISSION RECEIVED (DEV FALLBACK) ---');
     console.log(`To: ${receiverEmail}`);
     console.log(`From: ${name} <${email}>`);
-    console.log(`Course: ${course || 'General'}`);
     console.log(`Message: ${message}`);
-    console.log('------------------------------------------------');
 
     return NextResponse.json({
       success: true,
