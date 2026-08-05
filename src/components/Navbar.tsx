@@ -3,78 +3,35 @@
 import React, { useState, useEffect } from "react";
 import { HoveredLink, Menu, MenuItem } from "./ui/navbar-menu";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { cn } from "../lib/utils";
 
 function Navbar({ className }: { className?: string }) {
   const [active, setActive] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const handleScroll = () => {
-      if (window.scrollY > 25) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
+      setScrolled(window.scrollY > 25);
     };
 
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
-    <motion.header
-      initial={false}
-      animate={
-        mounted
-          ? {
-              top: scrolled ? "0px" : "1.75rem",
-              width: scrolled ? "100%" : "90%",
-              maxWidth: scrolled ? "100%" : "42rem", // max-w-2xl
-              borderRadius: scrolled ? "0px 0px 1.25rem 1.25rem" : "9999px",
-              borderColor: scrolled ? "rgba(13, 148, 136, 0.3)" : "rgba(255, 255, 255, 0.15)",
-              backgroundColor: scrolled ? "rgba(5, 5, 5, 0.92)" : "rgba(10, 10, 10, 0.75)",
-              boxShadow: scrolled
-                ? "0 20px 40px -15px rgba(0, 0, 0, 0.9), 0 0 25px rgba(13, 148, 136, 0.15)"
-                : "0 10px 30px -10px rgba(0, 0, 0, 0.6)",
-            }
-          : undefined
-      }
-      style={
-        !mounted
-          ? {
-              top: "1.75rem",
-              width: "90%",
-              maxWidth: "42rem",
-              borderRadius: "9999px",
-              borderColor: "rgba(255, 255, 255, 0.15)",
-              backgroundColor: "rgba(10, 10, 10, 0.75)",
-            }
-          : undefined
-      }
-      transition={{
-        type: "spring",
-        stiffness: 240,
-        damping: 24,
-        mass: 0.8,
-      }}
+    <header
       className={cn(
-        "fixed inset-x-0 mx-auto z-50 backdrop-blur-xl border transition-colors duration-300",
+        "fixed inset-x-0 mx-auto z-50 transition-all duration-500 ease-in-out backdrop-blur-xl border",
+        scrolled
+          ? "top-0 w-full max-w-full rounded-b-2xl bg-black/90 border-teal-500/30 shadow-2xl py-3.5 px-6 md:px-10"
+          : "top-6 w-[92%] max-w-2xl rounded-full bg-neutral-950/80 border-white/15 shadow-xl py-2.5 px-6",
         className
       )}
     >
-      <div
-        className={cn(
-          "flex items-center justify-between px-6 transition-all duration-300",
-          scrolled && mounted ? "py-3 max-w-7xl mx-auto" : "py-2"
-        )}
-      >
+      <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center space-x-2 group">
+        <Link href="/" className="flex items-center space-x-2 group shrink-0">
           <span className="text-xl">🎵</span>
           <span className="font-extrabold tracking-tight text-white group-hover:text-teal-400 transition-colors text-sm md:text-base">
             Master<span className="text-teal-400">Music</span>
@@ -82,7 +39,7 @@ function Navbar({ className }: { className?: string }) {
         </Link>
 
         {/* Center Menu Navigation */}
-        <Menu setActive={setActive} className="border-0 bg-transparent shadow-none py-0 px-0 space-x-4 md:space-x-8">
+        <Menu setActive={setActive} className="border-0 bg-transparent shadow-none py-0 px-0 space-x-3 md:space-x-8">
           <Link href={"/"}>
             <MenuItem setActive={setActive} active={active} item="Home" />
           </Link>
@@ -105,12 +62,12 @@ function Navbar({ className }: { className?: string }) {
         {/* Right CTA Action Button */}
         <Link
           href="/courses"
-          className="hidden sm:inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 transition-all duration-300 shadow-md hover:shadow-teal-500/20 active:scale-95"
+          className="hidden sm:inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-400 hover:to-emerald-500 transition-all duration-300 shadow-md hover:shadow-teal-500/20 active:scale-95 shrink-0"
         >
           Explore Courses &rarr;
         </Link>
       </div>
-    </motion.header>
+    </header>
   );
 }
 
