@@ -26,6 +26,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           from: 'Music Academy Contact <onboarding@resend.dev>',
           to: ['officialamansharma264@gmail.com'],
+          reply_to: email,
           subject: `New Inquiry from ${name}${course ? ` (${course})` : ''}`,
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
